@@ -1,0 +1,86 @@
+Slip 1
+
+1. Use Apriori algorithm on groceries dataset to find which items are brought together. 
+Use minimum support =0.25 
+
+import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.preprocessing import TransactionEncoder
+import warnings
+
+# Ignore runtime warnings from division by zero in association rules
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+# ===============================
+# 1. Dataset
+# ===============================
+dataset = [
+    ['milk', 'bread', 'eggs'],
+    ['bread', 'butter'],
+    ['milk', 'bread', 'butter', 'eggs'],
+    ['bread', 'eggs'],
+    ['milk', 'bread', 'butter']
+]
+
+# ===============================
+# 2. One-hot encoding
+# ===============================
+te = TransactionEncoder()
+te_ary = te.fit(dataset).transform(dataset)
+df = pd.DataFrame(te_ary, columns=te.columns_)
+
+print("One-hot encoded dataset:")
+print(df)
+
+# ===============================
+# 3. Apply Apriori
+# ===============================
+frequent_itemsets = apriori(df.astype(bool), min_support=0.25, use_colnames=True)
+
+print("\nFrequent Itemsets:")
+print(frequent_itemsets)
+
+# ===============================
+# 4. Association Rules
+# ===============================
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+
+# Drop NaN rows if any
+rules = rules.dropna()
+
+print("\nAssociation Rules:")
+print(rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']])
+
+2. Write a Python program to prepare Scatter Plot for Iris Dataset. Convert Categorical 
+values in numeric format for a dataset. 
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import LabelEncoder
+
+# Step 1: Load the Iris dataset
+iris = load_iris()
+df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+df['species'] = iris.target_names[iris.target]
+
+print("✅ Iris Dataset Loaded Successfully!\n")
+print("First 5 Rows:\n", df.head(), "\n")
+
+# Step 2: Convert categorical values ('species') into numeric format
+le = LabelEncoder()
+df['species_encoded'] = le.fit_transform(df['species'])
+
+print("🔢 Encoded Dataset:\n", df.head(), "\n")
+
+# Step 3: Prepare a scatter plot (e.g., Sepal Length vs Sepal Width)
+plt.figure(figsize=(8, 6))
+plt.scatter(df['sepal length (cm)'], df['sepal width (cm)'],
+            c=df['species_encoded'], cmap='viridis', s=80, edgecolor='k')
+
+plt.title("Scatter Plot - Iris Dataset")
+plt.xlabel("Sepal Length (cm)")
+plt.ylabel("Sepal Width (cm)")
+plt.colorbar(label="Species (Encoded)")
+plt.show()

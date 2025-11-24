@@ -1,0 +1,110 @@
+Slip 21
+
+
+Q.1.   Write a python program to implement multiple Linear Regression for a house price 
+dataset. Divide the dataset into training and testing data.
+
+# Step 1: Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+
+# Step 2: Create a sample house price dataset
+data = {
+    'Area': [1200, 1500, 1000, 1800, 2400, 3000, 3500, 4000],
+    'Bedrooms': [2, 3, 2, 3, 4, 4, 5, 5],
+    'Bathrooms': [1, 2, 1, 2, 3, 3, 4, 4],
+    'Stories': [1, 2, 1, 2, 2, 3, 3, 3],
+    'Price': [200000, 250000, 180000, 300000, 400000, 500000, 550000, 600000]
+}
+df = pd.DataFrame(data)
+
+# Step 3: Define features and target
+X = df[['Area', 'Bedrooms', 'Bathrooms', 'Stories']]  # Independent variables
+y = df['Price']  # Target variable
+
+# Step 4: Split into train and test data (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+
+# Step 5: Train the Multiple Linear Regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Step 6: Predict prices on test data
+y_pred = model.predict(X_test)
+
+# Step 7: Evaluate the model
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R² Score:", r2_score(y_test, y_pred))
+
+# Step 8: Display actual vs predicted
+result_df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+print(result_df)
+
+# Step 9: Plot the predictions
+plt.scatter(y_test, y_pred, color='blue')
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
+plt.xlabel('Actual Price')
+plt.ylabel('Predicted Price')
+plt.title('Actual vs Predicted House Prices')
+plt.grid(True)
+plt.show()
+
+
+Q.2. Write a python program to implement Linear SVM using UniversalBank.csv 
+
+#The dataset UniversalBank.csv typically contains columns like:
+#ID, Age, Experience, Income, Family, CCAvg, Education, Mortgage, Personal_Loan, Securities_Account, CD_Account, Online, CreditCard
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Step 1: Load the dataset
+df = pd.read_csv("UniversalBank.csv")
+print("Dataset loaded successfully!\n")
+
+# Step 2: Display basic information
+print("First 5 rows:\n", df.head(), "\n")
+print("Columns in dataset:\n", df.columns, "\n")
+
+# Step 3: Drop irrelevant columns (like ID and ZIP Code if present)
+if 'ID' in df.columns:
+    df.drop(['ID'], axis=1, inplace=True)
+if 'ZIP Code' in df.columns:
+    df.drop(['ZIP Code'], axis=1, inplace=True)
+
+# Step 4: Define features (X) and target (y)
+X = df.drop('Personal_Loan', axis=1)
+y = df['Personal_Loan']
+
+# Step 5: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Step 6: Standardize the feature values (important for SVM)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 7: Create and train the Linear SVM model
+model = SVC(kernel='linear', random_state=42)
+model.fit(X_train, y_train)
+
+# Step 8: Make predictions
+y_pred = model.predict(X_test)
+
+# Step 9: Evaluate the model
+print("✅ Model Evaluation:")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Step 10: Example prediction
+example = X_test[0].reshape(1, -1)
+predicted = model.predict(example)
+print("\nExample Prediction (1 = Loan Approved, 0 = Not Approved):", predicted[0])

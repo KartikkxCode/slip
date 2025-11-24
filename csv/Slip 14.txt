@@ -1,0 +1,153 @@
+Slip 14
+
+
+Q.1. Create a CNN model and train it on mnist handwritten digit dataset. Using model find 
+out the digit written by a hand in a given image. 
+Import mnist dataset from tensorflow.keras.datasets.
+
+# ========================================
+# RNN (LSTM) for Next-Day Stock Trend: GOOGL
+# Using Local CSV instead of yfinance
+# ========================================
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
+# ---------------------------
+# 1. Load Local CSV
+# ---------------------------
+df = pd.read_csv("GOOGL_sample.csv")   # <- put file in same folder
+df = df[['Date','Open','High','Low','Close','Volume']]
+df['Date'] = pd.to_datetime(df['Date'])
+df = df.sort_values('Date').reset_index(drop=True)
+
+print("Data loaded:", df.shape)
+print(df.head())
+
+# ---------------------------
+# 2. Feature Engineering
+# ---------------------------
+df['Return'] = df['Close'].pct_change()
+df['SMA_5'] = df['Close'].rolling(5).mean()
+df['SMA_10'] = df['Close'].rolling(10).mean()
+df['Vol_SMA_5'] = df['Volume'].rolling(5).mean()
+
+df.dropna(inplace=True)
+
+# Label: 1 if next day's Close > today's Close, else 0
+df['Close_next'] = df['Close'].shift(-1)
+df.dropna(inplace=True)
+df['Label'] = (df['Close_next'] > df['Close']).astype(int)
+
+# Features for training
+features = ['Close','Return','SMA_5','SMA_10','Vol_SMA_5']
+scaler = MinMaxScaler()
+X_scaled = scaler.fit_transform(df[features])
+
+# ---------------------------
+# 3. Build Sequences (Sliding Window)
+# ---------------------------
+WINDOW = 30
+X, y = [], []
+for i in range(WINDOW, len(X_scaled)):
+    X.append(X_scaled[i-WINDOW:i])
+    y.append(df['Label'].iloc[i])
+X, y = np.array(X), np.array(y)
+
+print("X shape:", X.shape, "y shape:", y.shape)
+
+# ---------------------------
+# 4. Train/Test Split (chronological)
+# ---------------------------
+split = int(0.8*len(X))
+X_train, X_test = X[:split], X[split:]
+y_train, y_test = y[:split], y[split:]
+
+# ---------------------------
+# 5. LSTM Model
+# ---------------------------
+model = models.Sequential([
+    layers.Input(shape=(WINDOW, X.shape[2])),
+    layers.LSTM(64, return_sequences=True),
+    layers.Dropout(0.2),
+    layers.LSTM(32),
+    layers.Dropout(0.2),
+    layers.Dense(16, activation='relu'),
+    layers.Dense(1, activation='sigmoid')
+])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.summary()
+
+# ---------------------------
+# 6. Train
+# ---------------------------
+history = model.fit(X_train, y_train, epochs=20, batch_size=16,
+                    validation_split=0.1, verbose=1)
+
+# Plot training history
+plt.plot(history.history['accuracy'], label='train acc')
+plt.plot(history.history['val_accuracy'], label='val acc')
+plt.legend(); plt.title("Training Accuracy"); plt.show()
+
+# ---------------------------
+# 7. Evaluation
+# ---------------------------
+y_pred_prob = model.predict(X_test).ravel()
+y_pred = (y_pred_prob > 0.5).astype(int)
+
+print("Test Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# ---------------------------
+# 8. Predict Next-Day Trend
+# ---------------------------
+last_window = X_scaled[-WINDOW:]
+last_window = last_window.reshape(1, WINDOW, X.shape[2])
+
+next_prob = model.predict(last_window)[0,0]
+prediction = "UP" if next_prob > 0.5 else "DOWN"
+
+print("\n>>> Next-day predicted trend:", prediction,
+      f"(Probability of UP = {next_prob:.2f})")
+
+Q.2. Write a python program to find all null values in a given dataset and remove them. 
+Create your own dataset.  
+
+# find_and_remove_nulls.py
+
+import pandas as pd
+import numpy as np
+
+# ------------------------------
+# Step 1: Create a Sample Dataset
+# ------------------------------
+data = {
+    'Name': ['Alice', 'Bob', 'Charlie', 'David', 'Eve'],
+    'Age': [25, np.nan, 30, 22, np.nan],
+    'City': ['New York', 'Los Angeles', np.nan, 'Chicago', 'Houston'],
+    'Salary': [50000, 60000, np.nan, 55000, 65000]
+}
+
+df = pd.DataFrame(data)
+print("Original Dataset:")
+print(df, "\n")
+
+# ------------------------------
+# Step 2: Find Null Values
+# ------------------------------
+print("Null Values in Each Column:")
+print(df.isnull().sum(), "\n")
+
+# ------------------------------
+# Step 3: Remove Rows with Null Values
+# ------------------------------
+df_cleaned = df.dropna()
+
+print("Dataset After Removing Null Values:")
+print(df_cleaned)

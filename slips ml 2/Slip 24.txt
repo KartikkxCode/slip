@@ -1,0 +1,95 @@
+Slip 24
+
+Q.1. Write a python program to Implement Decision Tree classifier model on Data which  
+is extracted from images that were taken from genuine and forged banknote-like  
+specimens. 
+(refer UCI dataset https://archive.ics.uci.edu/dataset/267/banknote+authentication)
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, accuracy_score
+
+# Load the dataset directly from UCI URL
+url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00267/data_banknote_authentication.txt"
+
+# Assign column names as given in the dataset description
+column_names = ['Variance', 'Skewness', 'Curtosis', 'Entropy', 'Class']
+data = pd.read_csv(url, header=None, names=column_names)
+
+# Split features and target
+X = data.drop('Class', axis=1)
+y = data['Class']
+
+# Split into training and testing data (80% training, 20% testing)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create and train Decision Tree classifier
+model = DecisionTreeClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+
+# Evaluate model
+print("----- Decision Tree Classifier Results -----")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+
+Q.2. Write a python program to implement Linear SVM using UniversalBank.csv 
+
+#The dataset UniversalBank.csv typically contains columns like:
+#ID, Age, Experience, Income, Family, CCAvg, Education, Mortgage, Personal_Loan, Securities_Account, CD_Account, Online, CreditCard
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Step 1: Load the dataset
+df = pd.read_csv("UniversalBank.csv")
+print("Dataset loaded successfully!\n")
+
+# Step 2: Display basic information
+print("First 5 rows:\n", df.head(), "\n")
+print("Columns in dataset:\n", df.columns, "\n")
+
+# Step 3: Drop irrelevant columns (like ID and ZIP Code if present)
+if 'ID' in df.columns:
+    df.drop(['ID'], axis=1, inplace=True)
+if 'ZIP Code' in df.columns:
+    df.drop(['ZIP Code'], axis=1, inplace=True)
+
+# Step 4: Define features (X) and target (y)
+X = df.drop('Personal_Loan', axis=1)
+y = df['Personal_Loan']
+
+# Step 5: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Step 6: Standardize the feature values (important for SVM)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 7: Create and train the Linear SVM model
+model = SVC(kernel='linear', random_state=42)
+model.fit(X_train, y_train)
+
+# Step 8: Make predictions
+y_pred = model.predict(X_test)
+
+# Step 9: Evaluate the model
+print("✅ Model Evaluation:")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Step 10: Example prediction
+example = X_test[0].reshape(1, -1)
+predicted = model.predict(example)
+print("\nExample Prediction (1 = Loan Approved, 0 = Not Approved):", predicted[0])

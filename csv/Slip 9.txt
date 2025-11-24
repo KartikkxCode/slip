@@ -1,0 +1,112 @@
+Slip 9
+
+Q.1. Implement Ridge Regression and Lasso regression model using boston_houses.csv  
+and take only ‘RM’ and ‘Price’ of the houses. Divide the data as training and testing  
+data. Fit line using Ridge regression and to find price of a house if it contains 5 rooms 
+and compare results.
+
+# Import required libraries
+import pandas as pd
+from sklearn.linear_model import Ridge, Lasso, ElasticNet
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+
+# Load the dataset
+data = pd.read_csv('boston_houses.csv')  # Ensure this CSV is in the same directory or give full path
+
+# Use only 'RM' (rooms) and 'Price'
+X = data[['RM']]
+y = data['Price']
+
+# Split the dataset into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Fit Ridge Regression
+ridge_model = Ridge(alpha=1.0)
+ridge_model.fit(X_train, y_train)
+ridge_predictions = ridge_model.predict(X_test)
+
+# Fit Lasso Regression
+lasso_model = Lasso(alpha=0.1)
+lasso_model.fit(X_train, y_train)
+lasso_predictions = lasso_model.predict(X_test)
+
+# Fit ElasticNet Regression
+elastic_model = ElasticNet(alpha=0.1, l1_ratio=0.5)
+elastic_model.fit(X_train, y_train)
+elastic_predictions = elastic_model.predict(X_test)
+
+# Predict price for a house with 5 rooms using proper feature name
+input_data = pd.DataFrame({'RM': [5]})
+ridge_price = ridge_model.predict(input_data)[0]
+lasso_price = lasso_model.predict(input_data)[0]
+elastic_price = elastic_model.predict(input_data)[0]
+
+# Print model evaluations and predictions
+print("----- Ridge Regression -----")
+print("MSE:", mean_squared_error(y_test, ridge_predictions))
+print("Predicted price for 5 rooms:", ridge_price)
+
+print("\n----- Lasso Regression -----")
+print("MSE:", mean_squared_error(y_test, lasso_predictions))
+print("Predicted price for 5 rooms:", lasso_price)
+
+print("\n----- ElasticNet Regression -----")
+print("MSE:", mean_squared_error(y_test, elastic_predictions))
+print("Predicted price for 5 rooms:", elastic_price)
+
+Q.2. Write a python program to implement Linear SVM using UniversalBank.csv 
+
+#The dataset UniversalBank.csv typically contains columns like:
+#ID, Age, Experience, Income, Family, CCAvg, Education, Mortgage, Personal_Loan, Securities_Account, CD_Account, Online, CreditCard
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Step 1: Load the dataset
+df = pd.read_csv("UniversalBank.csv")
+print("Dataset loaded successfully!\n")
+
+# Step 2: Display basic information
+print("First 5 rows:\n", df.head(), "\n")
+print("Columns in dataset:\n", df.columns, "\n")
+
+# Step 3: Drop irrelevant columns (like ID and ZIP Code if present)
+if 'ID' in df.columns:
+    df.drop(['ID'], axis=1, inplace=True)
+if 'ZIP Code' in df.columns:
+    df.drop(['ZIP Code'], axis=1, inplace=True)
+
+# Step 4: Define features (X) and target (y)
+X = df.drop('Personal_Loan', axis=1)
+y = df['Personal_Loan']
+
+# Step 5: Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Step 6: Standardize the feature values (important for SVM)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Step 7: Create and train the Linear SVM model
+model = SVC(kernel='linear', random_state=42)
+model.fit(X_train, y_train)
+
+# Step 8: Make predictions
+y_pred = model.predict(X_test)
+
+# Step 9: Evaluate the model
+print("✅ Model Evaluation:")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# Step 10: Example prediction
+example = X_test[0].reshape(1, -1)
+predicted = model.predict(example)
+print("\nExample Prediction (1 = Loan Approved, 0 = Not Approved):", predicted[0])

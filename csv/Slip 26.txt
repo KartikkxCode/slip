@@ -1,0 +1,119 @@
+Slip 26
+
+Q.1. Create KNN model on Indian diabetes patient’s database and predict whether a new 
+patient is diabetic (1) or not (0). Find optimal value of K.
+
+# Import libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
+
+# 1. Load Dataset
+# Download from: https://raw.githubusercontent.com/jbrownlee/Datasets/master/pima-indians-diabetes.data.csv
+# Column names as per dataset description
+column_names = ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 
+                'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
+
+data = pd.read_csv("pima-indians-diabetes.csv", names=column_names)
+
+# 2. Features and Labels
+X = data.drop("Outcome", axis=1)
+y = data["Outcome"]
+
+# 3. Standardize Features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# 4. Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# 5. Find optimal K
+accuracy_scores = []
+k_values = range(1, 21)  # Test K from 1 to 20
+
+for k in k_values:
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_pred = knn.predict(X_test)
+    accuracy_scores.append(accuracy_score(y_test, y_pred))
+
+# Plot K vs Accuracy
+plt.plot(k_values, accuracy_scores, marker='o')
+plt.xlabel("Number of Neighbors K")
+plt.ylabel("Accuracy")
+plt.title("KNN Accuracy for different K values")
+plt.show()
+
+# 6. Best K
+best_k = k_values[np.argmax(accuracy_scores)]
+print(f"Best K value: {best_k} with Accuracy: {max(accuracy_scores):.4f}")
+
+# 7. Train final model with best K
+final_knn = KNeighborsClassifier(n_neighbors=best_k)
+final_knn.fit(X_train, y_train)
+
+# 8. Predict for new patient (no warning version)
+new_patient = pd.DataFrame(
+    [[3, 120, 70, 20, 79, 25.5, 0.5, 33]],
+    columns=column_names[:-1]  # exclude "Outcome"
+)
+
+new_patient_scaled = scaler.transform(new_patient)
+prediction = final_knn.predict(new_patient_scaled)[0]
+
+print(f"New Patient Prediction: {'Diabetic (1)' if prediction==1 else 'Not Diabetic (0)'}")
+
+Q.2. Use Apriori algorithm on groceries dataset to find which items are brought together. 
+Use minimum support =0.25 
+
+import pandas as pd
+from mlxtend.frequent_patterns import apriori, association_rules
+from mlxtend.preprocessing import TransactionEncoder
+import warnings
+
+# Ignore runtime warnings from division by zero in association rules
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+# ===============================
+# 1. Dataset
+# ===============================
+dataset = [
+    ['milk', 'bread', 'eggs'],
+    ['bread', 'butter'],
+    ['milk', 'bread', 'butter', 'eggs'],
+    ['bread', 'eggs'],
+    ['milk', 'bread', 'butter']
+]
+
+# ===============================
+# 2. One-hot encoding
+# ===============================
+te = TransactionEncoder()
+te_ary = te.fit(dataset).transform(dataset)
+df = pd.DataFrame(te_ary, columns=te.columns_)
+
+print("One-hot encoded dataset:")
+print(df)
+
+# ===============================
+# 3. Apply Apriori
+# ===============================
+frequent_itemsets = apriori(df.astype(bool), min_support=0.25, use_colnames=True)
+
+print("\nFrequent Itemsets:")
+print(frequent_itemsets)
+
+# ===============================
+# 4. Association Rules
+# ===============================
+rules = association_rules(frequent_itemsets, metric="lift", min_threshold=1.0)
+
+# Drop NaN rows if any
+rules = rules.dropna()
+
+print("\nAssociation Rules:")
+print(rules[['antecedents', 'consequents', 'support', 'confidence', 'lift']])

@@ -1,0 +1,122 @@
+Slip 27
+
+Q.1.   Write a python program to implement multiple Linear Regression for a house price 
+dataset. Divide the dataset into training and testing data.
+
+# Step 1: Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+
+# Step 2: Create a sample house price dataset
+data = {
+    'Area': [1200, 1500, 1000, 1800, 2400, 3000, 3500, 4000],
+    'Bedrooms': [2, 3, 2, 3, 4, 4, 5, 5],
+    'Bathrooms': [1, 2, 1, 2, 3, 3, 4, 4],
+    'Stories': [1, 2, 1, 2, 2, 3, 3, 3],
+    'Price': [200000, 250000, 180000, 300000, 400000, 500000, 550000, 600000]
+}
+df = pd.DataFrame(data)
+
+# Step 3: Define features and target
+X = df[['Area', 'Bedrooms', 'Bathrooms', 'Stories']]  # Independent variables
+y = df['Price']  # Target variable
+
+# Step 4: Split into train and test data (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+
+# Step 5: Train the Multiple Linear Regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Step 6: Predict prices on test data
+y_pred = model.predict(X_test)
+
+# Step 7: Evaluate the model
+print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+print("R² Score:", r2_score(y_test, y_pred))
+
+# Step 8: Display actual vs predicted
+result_df = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+print(result_df)
+
+# Step 9: Plot the predictions
+plt.scatter(y_test, y_pred, color='blue')
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
+plt.xlabel('Actual Price')
+plt.ylabel('Predicted Price')
+plt.title('Actual vs Predicted House Prices')
+plt.grid(True)
+plt.show()
+
+Q.2 Fit the simple linear regression and polynomial linear regression models to Salary_positions.csv data. Find which one is more accurately fitting to the given data. Also predict the salaries of level 11 and level 12 employees
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import r2_score
+
+# Step 1: Load the dataset
+dataset = pd.read_csv('Salary_positions.csv')
+X = dataset[['Level']]     # Feature: Position level (as DataFrame)
+y = dataset['Salary']      # Target: Salary
+
+# Step 2: Simple Linear Regression
+lin_reg = LinearRegression()
+lin_reg.fit(X, y)
+
+# Step 3: Polynomial Regression (degree 2)
+poly = PolynomialFeatures(degree=2)
+X_poly = poly.fit_transform(X)
+
+lin_reg_poly = LinearRegression()
+lin_reg_poly.fit(X_poly, y)
+
+#Step 4: Visualize Simple Linear Regression
+plt.scatter(X, y, color='red')
+plt.plot(X, lin_reg.predict(X), color='blue')
+plt.title('Simple Linear Regression')
+plt.xlabel('Position Level')
+plt.ylabel('Salary')
+plt.show()
+
+#Step 5: Visualize Polynomial Regression
+X_grid = np.arange(min(X['Level']), max(X['Level']) + 0.1, 0.1).reshape(-1, 1)
+X_grid_df = pd.DataFrame(X_grid, columns=['Level'])
+
+plt.scatter(X, y, color='red')
+plt.plot(X_grid, lin_reg_poly.predict(poly.transform(X_grid_df)), color='green')
+plt.title('Polynomial Regression (Degree 2)')
+plt.xlabel('Position Level')
+plt.ylabel('Salary')
+plt.show()
+
+#Step 6: Accuracy Comparison
+y_pred_linear = lin_reg.predict(X)
+y_pred_poly = lin_reg_poly.predict(X_poly)
+
+r2_linear = r2_score(y, y_pred_linear)
+r2_poly = r2_score(y, y_pred_poly)
+
+print(f"R² Score (Linear Regression): {r2_linear:.4f}")
+print(f"R² Score (Polynomial Regression): {r2_poly:.4f}")
+
+#Step 7: Predictions for Level 11 and 12 
+level_11 = pd.DataFrame([[11]], columns=['Level'])   
+level_12 = pd.DataFrame([[12]], columns=['Level'])   
+
+linear_pred_11 = lin_reg.predict(level_11)
+linear_pred_12 = lin_reg.predict(level_12)
+
+poly_pred_11 = lin_reg_poly.predict(poly.transform(level_11)) 
+poly_pred_12 = lin_reg_poly.predict(poly.transform(level_12))  
+
+print("\nPredicted Salaries:")
+print(f"Linear - Level 11: ₹{linear_pred_11[0]:,.2f}")
+print(f"Linear - Level 12: ₹{linear_pred_12[0]:,.2f}")
+print(f"Polynomial - Level 11: ₹{poly_pred_11[0]:,.2f}")
+print(f"Polynomial - Level 12: ₹{poly_pred_12[0]:,.2f}")

@@ -1,0 +1,157 @@
+Slip 25
+
+
+Q.1. Write a python program to implement Polynomial Regression for house price dataset.
+
+# polynomial_regression_house_price.py
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+
+# ------------------------------
+# Step 1: Load Dataset
+# ------------------------------
+# Example: synthetic data for demonstration
+# Replace this with your dataset, e.g.,
+# data = pd.read_csv("house_prices.csv")
+np.random.seed(0)
+square_feet = np.random.uniform(500, 3500, 50)
+price = 50000 + 120 * square_feet + 0.05 * (square_feet ** 2) + np.random.normal(0, 25000, 50)
+
+data = pd.DataFrame({'SquareFeet': square_feet, 'Price': price})
+
+# ------------------------------
+# Step 2: Prepare Data
+# ------------------------------
+X = data[['SquareFeet']]
+y = data['Price']
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# ------------------------------
+# Step 3: Polynomial Feature Transformation
+# ------------------------------
+degree = 2  # You can experiment with degree=3 or 4 for better fit
+poly_features = PolynomialFeatures(degree=degree)
+X_train_poly = poly_features.fit_transform(X_train)
+X_test_poly = poly_features.transform(X_test)
+
+# ------------------------------
+# Step 4: Train Model
+# ------------------------------
+model = LinearRegression()
+model.fit(X_train_poly, y_train)
+
+# ------------------------------
+# Step 5: Predict
+# ------------------------------
+y_pred = model.predict(X_test_poly)
+
+# ------------------------------
+# Step 6: Evaluate Model
+# ------------------------------
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Polynomial Regression (degree={degree})")
+print(f"Mean Squared Error: {mse:.2f}")
+print(f"R² Score: {r2:.4f}")
+
+# ------------------------------
+# Step 7: Visualization
+# ------------------------------
+plt.scatter(X, y, color='blue', label='Actual Data')
+X_range = np.linspace(X.min(), X.max(), 200).reshape(-1, 1)
+X_range_poly = poly_features.transform(X_range)
+plt.plot(X_range, model.predict(X_range_poly), color='red', linewidth=2, label='Polynomial Regression Fit')
+
+plt.xlabel('Square Feet')
+plt.ylabel('House Price')
+plt.title('Polynomial Regression for House Prices')
+plt.legend()
+plt.show()
+
+Q.2. Create a two layered neural network with relu and sigmoid activation function.
+
+import numpy as np
+
+# Activation functions
+def relu(x):
+    return np.maximum(0, x)
+
+def relu_derivative(x):
+    return np.where(x > 0, 1, 0)
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    s = sigmoid(x)
+    return s * (1 - s)
+
+# Two-layer neural network
+class TwoLayerNN:
+    def __init__(self, input_size, hidden_size, output_size, learning_rate=0.01):
+        # Initialize weights
+        self.W1 = np.random.randn(input_size, hidden_size) * 0.01
+        self.b1 = np.zeros((1, hidden_size))
+        self.W2 = np.random.randn(hidden_size, output_size) * 0.01
+        self.b2 = np.zeros((1, output_size))
+        self.lr = learning_rate
+
+    def forward(self, X):
+        # Hidden layer
+        self.z1 = np.dot(X, self.W1) + self.b1
+        self.a1 = relu(self.z1)
+
+        # Output layer
+        self.z2 = np.dot(self.a1, self.W2) + self.b2
+        self.a2 = sigmoid(self.z2)
+        return self.a2
+
+    def backward(self, X, y):
+        m = X.shape[0]
+
+        # Output layer error
+        dz2 = self.a2 - y
+        dW2 = (1/m) * np.dot(self.a1.T, dz2)
+        db2 = (1/m) * np.sum(dz2, axis=0, keepdims=True)
+
+        # Hidden layer error
+        dz1 = np.dot(dz2, self.W2.T) * relu_derivative(self.z1)
+        dW1 = (1/m) * np.dot(X.T, dz1)
+        db1 = (1/m) * np.sum(dz1, axis=0, keepdims=True)
+
+        # Update weights
+        self.W1 -= self.lr * dW1
+        self.b1 -= self.lr * db1
+        self.W2 -= self.lr * dW2
+        self.b2 -= self.lr * db2
+
+    def train(self, X, y, epochs=1000):
+        for i in range(epochs):
+            self.forward(X)
+            self.backward(X, y)
+            if i % 100 == 0:
+                loss = -np.mean(y*np.log(self.a2+1e-8) + (1-y)*np.log(1-self.a2+1e-8))
+                print(f"Epoch {i}, Loss: {loss:.4f}")
+
+
+# Example usage
+if __name__ == "__main__":
+    # XOR dataset
+    X = np.array([[0,0],[0,1],[1,0],[1,1]])
+    y = np.array([[0],[1],[1],[0]])
+
+    nn = TwoLayerNN(input_size=2, hidden_size=4, output_size=1, learning_rate=0.1)
+    nn.train(X, y, epochs=1000)
+
+    # Predictions
+    print("Predictions:")
+    print(nn.forward(X))

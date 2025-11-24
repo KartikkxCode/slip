@@ -1,0 +1,111 @@
+Slip 10
+
+Q.1. Write a python program to transform data with Principal Component Analysis (PCA).      
+Use iris dataset.
+
+# pca_iris_dataset.py
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# ------------------------------
+# Step 1: Load the Iris Dataset
+# ------------------------------
+iris = load_iris()
+X = iris.data
+y = iris.target
+target_names = iris.target_names
+
+# Create a DataFrame for better readability
+df = pd.DataFrame(X, columns=iris.feature_names)
+df['Target'] = y
+
+print("Original Iris Dataset:")
+print(df.head(), "\n")
+
+# ------------------------------
+# Step 2: Standardize the Data
+# ------------------------------
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# ------------------------------
+# Step 3: Apply PCA
+# ------------------------------
+# Reduce 4 features → 2 principal components
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# ------------------------------
+# Step 4: Create a New DataFrame with PCA Results
+# ------------------------------
+df_pca = pd.DataFrame(data=X_pca, columns=['PC1', 'PC2'])
+df_pca['Target'] = y
+
+print("Transformed Dataset after PCA:")
+print(df_pca.head(), "\n")
+
+# ------------------------------
+# Step 5: Explained Variance Ratio
+# ------------------------------
+print("Explained Variance Ratio:")
+print(pca.explained_variance_ratio_)
+print(f"Total Variance Explained: {sum(pca.explained_variance_ratio_)*100:.2f}%\n")
+
+# ------------------------------
+# Step 6: Visualize PCA Results
+# ------------------------------
+plt.figure(figsize=(8, 6))
+colors = ['red', 'green', 'blue']
+for color, i, target_name in zip(colors, [0, 1, 2], target_names):
+    plt.scatter(
+        df_pca.loc[df_pca['Target'] == i, 'PC1'],
+        df_pca.loc[df_pca['Target'] == i, 'PC2'],
+        color=color,
+        label=target_name
+    )
+
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.title('PCA of Iris Dataset')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+Q.2. Write a Python program to prepare Scatter Plot for Iris Dataset. Convert Categorical 
+values in numeric format for a dataset. 
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.datasets import load_iris
+from sklearn.preprocessing import LabelEncoder
+
+# Step 1: Load the Iris dataset
+iris = load_iris()
+df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+df['species'] = iris.target_names[iris.target]
+
+print("✅ Iris Dataset Loaded Successfully!\n")
+print("First 5 Rows:\n", df.head(), "\n")
+
+# Step 2: Convert categorical values ('species') into numeric format
+le = LabelEncoder()
+df['species_encoded'] = le.fit_transform(df['species'])
+
+print("🔢 Encoded Dataset:\n", df.head(), "\n")
+
+# Step 3: Prepare a scatter plot (e.g., Sepal Length vs Sepal Width)
+plt.figure(figsize=(8, 6))
+plt.scatter(df['sepal length (cm)'], df['sepal width (cm)'],
+            c=df['species_encoded'], cmap='viridis', s=80, edgecolor='k')
+
+plt.title("Scatter Plot - Iris Dataset")
+plt.xlabel("Sepal Length (cm)")
+plt.ylabel("Sepal Width (cm)")
+plt.colorbar(label="Species (Encoded)")
+plt.show()
